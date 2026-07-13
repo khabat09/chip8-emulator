@@ -1,13 +1,9 @@
-import display from "/core/display.js";
-
-const emulator_states = {
-    QUIT: 1,
-    RUNNING: 2,
-    PAUSED: 3
-}
+import Machine from "/core/chip8Machine.js";
 
 let lastTime = 0;
 let dt = 0;
+
+const machine = new Machine();
 
 function loop(time) {
     requestAnimationFrame(loop);

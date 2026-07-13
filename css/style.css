@@ -4,12 +4,16 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: black;
+    background: #333;
     height: 100vh;
     width: 100vw;
+    
 }
 
 canvas {
-    outline: 1px solid darkblue;
+    outline: 1px solid #555;
+    background: black;
     scale: 5;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
 }
