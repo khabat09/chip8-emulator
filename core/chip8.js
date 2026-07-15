@@ -9,8 +9,11 @@ function loop(time) {
 	requestAnimationFrame(loop);
 	dt = (time - lastTime) / 1000;
 	lastTime = time;
-	if (machine.isRomLoaded) machine.emulate();
+	console.log(1/dt);
+	// if (machine.isRomLoaded) machine.emulate();
 	
 }
 
-requestAnimationFrame(loop);
+
+
+// requestAnimationFrame(loop);

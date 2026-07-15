@@ -24,11 +24,7 @@ const chip8FontSet = new Uint8Array([
 
 class Chip8Machine {
 	constructor() {
-		this.ca = document.createElement("canvas");
-		document.body.appendChild(this.ca);
-		this.display = new Display(
-			this.ca, { x: 64, y: 32 }
-		);
+		this.display = new Display(this.keyPress, this.keyRelease, { x: 64, y: 32 }, 5);
 		this.state = STATES.PAUSED;
 		this.isRomLoaded = 0;
 		
@@ -40,12 +36,11 @@ class Chip8Machine {
 		this.V = new Uint8Array(16);
 		this.I = 0;
 		this.delayTimer = 0;
-		this.soundTimer = 0;
-		this.keypad = new Uint8Array(16);
+		this.soundTimer = 5000;
+		this.keys = new Uint8Array(16);
 		this.awaitingKey = false;
 		this.keyFuncCallBack;
 		this.inst = new Instruction();
-		
 		
 		
 		//
@@ -53,6 +48,13 @@ class Chip8Machine {
 		this.loadRom();
 		
 		this.display.init();
+		
+		setInterval(() => this.emulate(), 1000 / 700);
+		
+		setInterval(() => {
+			if (this.delayTimer > 0) this.delayTimer--;
+			if (this.soundTimer > 0) this.soundTimer--;
+		}, 1000 / 60);
 	}
 	
 	
@@ -64,7 +66,7 @@ class Chip8Machine {
 	
 	async loadRom() {
 		this.isRomLoaded = 0;
-		const res = await fetch("/roms/test_opcode.ch8");
+		const res = await fetch("/roms/BC_test.ch8");
 		const buffer = await res.arrayBuffer();
 		const data = new Uint8Array(buffer);
 		for (let i = 0; i < data.length; i++) {
@@ -77,14 +79,26 @@ class Chip8Machine {
 	
 	getKey(callBack) {
 		this.keyFuncCallBack = callBack;
+		console.log("key callback")
 	}
 	
-	keyPress(key){
-		this.keyFuncCallBack(key);
+	keyPress(key) {
+		console.log(this.keys)
+		this.keys[key] = 1;
+		if (this.keyFuncCallBack) {
+			this.keyFuncCallBack(key);
+			this.keyFuncCallBack = undefined;
+		};
+		console.log("keypress: ", key)
 	}
-	
+	keyRelease(key) {
+		console.log(this.keys)
+		this.keys[key] = 0;
+		console.log("keyrelease: ", key)
+	}
 	emulate() {
-		if (!this.awaitingKey) this.emulateInst();
+		if (this.delayTimer > 0) this.delayTimer--;
+		if (!this.awaitingKey && this.isRomLoaded) this.emulateInst();
 	}
 	
 	emulateInst() {
@@ -125,11 +139,11 @@ class Chip8Machine {
 				break;
 				
 			case 0x04:
-				if (this.V[this.inst.X] != this.NN) this.PC += 2;
+				if (this.V[this.inst.X] != this.inst.NN) this.PC += 2;
 				break;
 				
 			case 0x05:
-				if (this.V[this.inst.X] == this.V[this.inst.Y]) this.PC += 2;
+				if (this.V[this.inst.X] === this.V[this.inst.Y]) this.PC += 2;
 				break;
 				
 			case 0x06:
@@ -162,7 +176,7 @@ class Chip8Machine {
 					case 0x05:
 						if (this.V[this.inst.X] > this.V[this.inst.Y]) this.V[0xf] = 0;
 						else this.V[0xf] = 1;
-						this.V[this.inst.X] = this.V[this.inst.Y];
+						this.V[this.inst.X] -= this.V[this.inst.Y];
 						break;
 					case 0x06:
 						this.V[0xf] = (this.V[this.inst.X] << 7) >> 7;
@@ -205,37 +219,46 @@ class Chip8Machine {
 			case 0x0e:
 				switch (this.inst.NN) {
 					case 0x9e:
-						if (this.keypad[this.V[this.inst.X]]) this.PC += 2;
+						if (this.keys[this.V[this.inst.X]]) this.PC += 2;
+						console.log(this.keys[this.V[this.inst.X]]);
 						break;
 						
-					case 0x9e:
-						if (!this.keypad[this.V[this.inst.X]]) this.PC += 2;
+					case 0xa1:
+						if (!this.keys[this.V[this.inst.X]]) this.PC += 2;
 						break;
 				}
+				break;
 				
 			case 0x0f:
 				switch (this.inst.NN) {
 					case 0x07:
+						console.log("07")
 						this.V[this.inst.X] = this.delayTimer;
 						break;
 						
 					case 0x15:
+						console.log("15")
 						this.delayTimer = this.V[this.inst.X];
+						console.log(this.delayTimer)
 						break;
 						
 					case 0x18:
+						console.log("18")
 						this.soundTimer = this.V[this.inst.X];
 						break;
 						
 					case 0x1e:
+						console.log("1e")
 						this.I += this.V[this.inst.X];
 						break;
 						
 					case 0x29:
+						console.log("29")
 						this.I = this.V[this.inst.X] * 5;
 						break;
 						
 					case 0x33:
+						console.log("33")
 						const vx = this.V[this.inst.X];
 						const vals = new Uint8Array(3);
 						let hi = 0;
@@ -248,17 +271,20 @@ class Chip8Machine {
 						break;
 						
 					case 0x55:
+						console.log("55")
 						for (let i = 0; i <= this.inst.X; i++) {
 							this.memory[this.I + i] = this.V[i];
 						}
 						break;
 					case 0x65:
+						console.log("65")
 						for (let i = 0; i <= this.inst.X; i++) {
 							this.V[i] = this.memory[this.I + i];
 						}
 						break;
 						
 					case 0x0a:
+						console.log("a")
 						this.awaitingKey = true;
 						this.getKey((key) => {
 							this.V[this.inst.X] = key;
@@ -268,7 +294,7 @@ class Chip8Machine {
 						break;
 						
 					default:
-						console.log("unimplemented")
+						console.log("unimplemented fffffff, this opcode: ", this.inst.opcode.toString(16))
 						
 				}
 				break;
