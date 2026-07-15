@@ -42,7 +42,10 @@ class Chip8Machine {
 		this.delayTimer = 0;
 		this.soundTimer = 0;
 		this.keypad = new Uint8Array(16);
+		this.awaitingKey = false;
+		this.keyFuncCallBack;
 		this.inst = new Instruction();
+		
 		
 		
 		//
@@ -61,7 +64,7 @@ class Chip8Machine {
 	
 	async loadRom() {
 		this.isRomLoaded = 0;
-		const res = await fetch("/roms/IBM Logo.ch8");
+		const res = await fetch("/roms/test_opcode.ch8");
 		const buffer = await res.arrayBuffer();
 		const data = new Uint8Array(buffer);
 		for (let i = 0; i < data.length; i++) {
@@ -72,11 +75,23 @@ class Chip8Machine {
 		this.isRomLoaded = 1;
 	}
 	
+	getKey(callBack) {
+		this.keyFuncCallBack = callBack;
+	}
+	
+	keyPress(key){
+		this.keyFuncCallBack(key);
+	}
+	
+	emulate() {
+		if (!this.awaitingKey) this.emulateInst();
+	}
+	
 	emulateInst() {
 		this.inst.opcode = (this.memory[this.PC] << 8) | (this.memory[this.PC + 1]);
 		this.PC += 2;
 		
-		// console.log(`opcode: 0x${this.inst.opcode.toString(16)} and we did`);
+		console.log(`opcode: 0x${this.inst.opcode.toString(16)} and we did`);
 		
 		this.inst.NNN = this.inst.opcode & 0x0fff;
 		this.inst.NN = this.inst.opcode & 0x0ff;
@@ -90,7 +105,7 @@ class Chip8Machine {
 					// 0x0e0 clear screen
 					this.display.clearScreen();
 				} else if (this.inst.NN = 0xee) {
-					this.PC = this.stack[this.stackIndex--];
+					this.PC = this.stack[--this.stackIndex];
 				}
 				break;
 				
@@ -104,7 +119,7 @@ class Chip8Machine {
 				break;
 				
 			case 0x03:
-				if (this.V[this.inst.x] == this.inst.NN) {
+				if (this.V[this.inst.X] == this.inst.NN) {
 					this.PC += 2;
 				}
 				break;
@@ -163,18 +178,18 @@ class Chip8Machine {
 						this.V[this.inst.X] <<= 1;
 						break;
 					default:
-					break;
+						break;
 				}
 				break;
-			
+				
 			case 0x09:
-				if(this.V[this.inst.X] != this.V[this.inst.Y])this.PC += 2;
+				if (this.V[this.inst.X] != this.V[this.inst.Y]) this.PC += 2;
 				break;
 				
 			case 0x0a:
 				this.I = this.inst.NNN;
 				break;
-			
+				
 			case 0x0b:
 				this.PC = this.V[0] + this.inst.NNN;
 				break;
@@ -182,17 +197,28 @@ class Chip8Machine {
 			case 0x0c:
 				this.V[this.inst.X] = Math.floor(Math.random() * 256) & this.inst.NN;
 				break;
-			
+				
 			case 0x0d:
 				this.doInstDXYN();
 				break;
 				
+			case 0x0e:
+				switch (this.inst.NN) {
+					case 0x9e:
+						if (this.keypad[this.V[this.inst.X]]) this.PC += 2;
+						break;
+						
+					case 0x9e:
+						if (!this.keypad[this.V[this.inst.X]]) this.PC += 2;
+						break;
+				}
+				
 			case 0x0f:
-				switch(this.inst.NN){
+				switch (this.inst.NN) {
 					case 0x07:
 						this.V[this.inst.X] = this.delayTimer;
 						break;
-					
+						
 					case 0x15:
 						this.delayTimer = this.V[this.inst.X];
 						break;
@@ -204,11 +230,49 @@ class Chip8Machine {
 					case 0x1e:
 						this.I += this.V[this.inst.X];
 						break;
-					
-					
+						
+					case 0x29:
+						this.I = this.V[this.inst.X] * 5;
+						break;
+						
+					case 0x33:
+						const vx = this.V[this.inst.X];
+						const vals = new Uint8Array(3);
+						let hi = 0;
+						for (let i = 2; i >= 0; i--) {
+							let val = Math.floor(vx / 10 ** i) - hi;
+							this.memory[this.I + 2 - i] = val;
+							hi = Math.floor(vx / 10 ** i) * 10;
+						}
+						
+						break;
+						
+					case 0x55:
+						for (let i = 0; i <= this.inst.X; i++) {
+							this.memory[this.I + i] = this.V[i];
+						}
+						break;
+					case 0x65:
+						for (let i = 0; i <= this.inst.X; i++) {
+							this.V[i] = this.memory[this.I + i];
+						}
+						break;
+						
+					case 0x0a:
+						this.awaitingKey = true;
+						this.getKey((key) => {
+							this.V[this.inst.X] = key;
+							this.awaitingKey = false;
+						});
+						
+						break;
+						
+					default:
+						console.log("unimplemented")
 						
 				}
-			
+				break;
+				
 			default:
 				console.log("unimplemented opcode")
 				//throw new Error("ummm this rom is broken it uses an instruction that hasnt been implemented! so dont use it ok😭")
@@ -255,3 +319,14 @@ class Instruction {
 
 
 export default Chip8Machine;
+
+const vx = 0;
+const vals = new Uint8Array(3);
+let hi = 0;
+for (let i = 2; i >= 0; i--) {
+	let val = Math.floor(vx / 10 ** i) - hi;
+	vals[2 - i] = val;
+	hi = Math.floor(vx / 10 ** i) * 10;
+}
+
+console.log(vals)
