@@ -49,10 +49,9 @@ class Chip8Machine {
 		
 		this.display.init();
 		
-		// setInterval(() => this.emulate(), 1000 / 700);
 		
 		setInterval(() => {
-			if (this.delayTimer > 0) this.delayTimer--;
+			// if (this.delayTimer > 0) this.delayTimer--;
 			if (this.soundTimer > 0) this.soundTimer--;
 		}, 1000 / 60);
 	}
@@ -66,7 +65,7 @@ class Chip8Machine {
 	
 	async loadRom() {
 		this.isRomLoaded = 0;
-		const res = await fetch("/roms/IBM Logo.ch8");
+		const res = await fetch("/roms/TETRIS");
 		const buffer = await res.arrayBuffer();
 		const data = new Uint8Array(buffer);
 		for (let i = 0; i < data.length; i++) {
@@ -97,7 +96,6 @@ class Chip8Machine {
 	}
 	
 	emulateInst() {
-		console.log("hi")
 		this.inst.opcode = (this.memory[this.PC] << 8) | (this.memory[this.PC + 1]);
 		this.PC += 2;
 		
@@ -114,6 +112,7 @@ class Chip8Machine {
 				if (this.inst.NN == 0xe0) {
 					// 0x0e0 clear screen
 					this.display.clearScreen();
+					console.log("clear")
 				} else if (this.inst.NN == 0xee) {
 					this.PC = this.stack[--this.stackIndex];
 				}

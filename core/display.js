@@ -23,11 +23,12 @@ class Display {
 	}
 	
 	draw() {
-		this.c.fillStyle = "white";
 		for (let x = 0; x < 64; x++) {
 			for (let y = 0; y < 32; y++) {
 				const index = y * 64 + x;
-				if (this.data[index]) this.c.fillRect(x * this.scale, y * this.scale, this.scale, this.scale);
+				if (this.data[index]) this.c.fillStyle = "white";
+				else this.c.fillStyle = "black";
+				this.c.fillRect(x * this.scale, y * this.scale, this.scale, this.scale);
 			}
 		}
 	}

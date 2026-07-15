@@ -9,6 +9,10 @@ body {
     width: 100vw;
     flex-direction: column;
     
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    
 }
 
 canvas {
@@ -34,8 +38,4 @@ canvas {
 }
 
 
-.key {
-    user-select: none;
-    -moz-user-select: none;
-    -webkit-user-select: none;
-}
+.key {}
