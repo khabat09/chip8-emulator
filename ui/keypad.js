@@ -1,9 +1,7 @@
 class Keypad {
-	constructor(callBack, releaseCallBack) {
+	constructor(machine) {
 		this.keypad = document.createElement("div");
-		this.callBack = callBack;
-		this.releaseCallBack = releaseCallBack;
-		this.keys = [];
+		this.machine = machine;
 		this.setup();
 	}
 	
@@ -16,10 +14,10 @@ class Keypad {
 			key.textContent = i.toString(16);
 			
 			key.addEventListener("touchstart", () => {
-				this.callBack(i);
+				this.machine.keyPress(i);
 			});
 			key.addEventListener("touchend", () => {
-				this.releaseCallBack(i);
+				this.machine.keyRelease(i);
 			});
 			
 		}

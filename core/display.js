@@ -1,11 +1,11 @@
 import Keypad from "/ui/keypad.js";
 
 class Display {
-	constructor(keyCallBack, keyReleaseCallBack, size, scale) {
+	constructor(machine, size, scale) {
 		this.displayDiv = document.createElement("div");
 		this.displayDiv.classList.add("displayDiv");
 		this.ca = document.createElement("canvas");
-		this.keypad = new Keypad(keyCallBack, keyReleaseCallBack);
+		this.keypad = new Keypad(machine);
 		
 		this.displayDiv.appendChild(this.ca);
 		this.displayDiv.appendChild(this.keypad.keypad);
@@ -34,7 +34,7 @@ class Display {
 	
 	clearScreen() {
 		this.data = new Uint8Array(64 * 32);
-		this.c.clearRect(0, 0, this.ca.minWidth, this.ca.minHeight);
+		this.c.clearRect(0, 0, this.ca.width, this.ca.height);
 	}
 }
 

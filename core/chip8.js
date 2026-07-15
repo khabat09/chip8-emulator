@@ -7,13 +7,13 @@ const machine = new Machine();
 
 function loop(time) {
 	requestAnimationFrame(loop);
-	dt = (time - lastTime) / 1000;
-	lastTime = time;
-	console.log(1/dt);
-	// if (machine.isRomLoaded) machine.emulate();
+	// dt = (time - lastTime) / 1000;
+	// lastTime = time;
+	// console.log(1/dt);
+	machine.emulate();
 	
 }
 
-
-
-// requestAnimationFrame(loop);
+for(let i = 0; i < 700/60; i++){
+	requestAnimationFrame(loop);
+}
