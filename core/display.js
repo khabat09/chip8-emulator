@@ -4,13 +4,12 @@ class Display {
 		this.size = size;
 		this.data = new Uint8Array(64 * 32);
 		this.c = this.ca.getContext("2d");
+		this.hi = 1;
 	}
 	
 	init() {
 		this.ca.width = this.size.x;
 		this.ca.height = this.size.y;
-		for (let i = 0; i < 64 * 32; i++) this.data[i] = (Math.round(Math.random()));
-		this.draw();
 	}
 	
 	draw() {
@@ -24,8 +23,8 @@ class Display {
 	}
 	
 	clearScreen() {
-		// this.data = new Uint8Array(64 * 32);
-		// this.c.clearRect(0, 0, this.ca.width, this.ca.height);
+		this.data = new Uint8Array(64 * 32);
+		this.c.clearRect(0, 0, this.ca.width, this.ca.height);
 	}
 }
 

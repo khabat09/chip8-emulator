@@ -6,10 +6,11 @@ let dt = 0;
 const machine = new Machine();
 
 function loop(time) {
-    requestAnimationFrame(loop);
-    dt = (time - lastTime) / 1000;
-    lastTime = time;
-    
+	requestAnimationFrame(loop);
+	dt = (time - lastTime) / 1000;
+	lastTime = time;
+	if (machine.isRomLoaded) machine.emulateInst();
+	
 }
 
 requestAnimationFrame(loop);
