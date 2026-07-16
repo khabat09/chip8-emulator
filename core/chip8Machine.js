@@ -23,7 +23,8 @@ const chip8FontSet = new Uint8Array([
 
 
 class Chip8Machine {
-	constructor() {
+	constructor(removeMachine) {
+		this.removeMachine = removeMachine;
 		this.display = new Display(this, { x: 64, y: 32 }, 5);
 		this.state = STATES.PAUSED;
 		this.isRomLoaded = 0;
@@ -36,26 +37,48 @@ class Chip8Machine {
 		this.V = new Uint8Array(16);
 		this.I = 0;
 		this.delayTimer = 0;
-		this.soundTimer = 5000;
+		this.soundTimer = 0;
 		this.keys = new Uint8Array(16);
 		this.awaitingKey = false;
 		this.keyFuncCallBack;
 		this.inst = new Instruction();
 		
+		this.sound = new Sound();
 		
 		//
 		this.loadFontSet();
-		this.loadRom();
 		
 		this.display.init();
 		
 		
 		setInterval(() => {
-			// if (this.delayTimer > 0) this.delayTimer--;
-			if (this.soundTimer > 0) this.soundTimer--;
+			if (!this.isRomLoaded || this.state !== STATES.RUNNING) {
+				this.sound.stop();
+				return;
+			}
+			if (this.delayTimer > 0) this.delayTimer--;
+			if (this.soundTimer > 0) {
+				this.soundTimer--;
+				this.sound.start();
+			} else this.sound.stop();
 		}, 1000 / 60);
 	}
 	
+	start() {
+		this.state = STATES.RUNNING;
+	}
+	pause() {
+		this.state = STATES.PAUSED;
+	}
+	quit() {
+		this.state = STATES.QUIT;
+	}
+	
+	
+	
+	initSound() {
+		this.sound.init();
+	}
 	
 	loadFontSet() {
 		for (let i = 0; i < chip8FontSet.length; i++) {
@@ -63,16 +86,35 @@ class Chip8Machine {
 		}
 	}
 	
-	async loadRom() {
+	newRom() {
+		this.memory = new Uint8Array(4096);
+		this.stack = new Uint16Array(12);
+		this.stackIndex = 0;
+		this.PC = 0x200;
+		this.V = new Uint8Array(16);
+		this.I = 0;
+		this.delayTimer = 0;
+		this.soundTimer = 0;
+		this.keys = new Uint8Array(16);
+		this.awaitingKey = false;
+		this.keyFuncCallBack;
+		this.inst = new Instruction();
+		
+		this.loadFontSet();
+	}
+	
+	async loadRom(file) {
 		this.isRomLoaded = 0;
-		const res = await fetch("/roms/TETRIS");
-		const buffer = await res.arrayBuffer();
+		this.newRom();
+		this.display.newRom();
+		const buffer = await file.arrayBuffer();
 		const data = new Uint8Array(buffer);
 		for (let i = 0; i < data.length; i++) {
 			this.memory[this.PC + i] = data[i];
 		}
 		console.log(data)
 		console.log(this.memory);
+		
 		this.isRomLoaded = 1;
 	}
 	
@@ -91,8 +133,11 @@ class Chip8Machine {
 		this.keys[key] = 0;
 	}
 	emulate() {
-		if (this.delayTimer > 0) this.delayTimer--;
-		if (!this.awaitingKey && this.isRomLoaded) this.emulateInst();
+		if (this.state == STATES.QUIT) {
+			this.display.cleanup();
+			this.removeMachine(this);
+		}
+		if (!this.awaitingKey && this.isRomLoaded && this.state == STATES.RUNNING) this.emulateInst();
 	}
 	
 	emulateInst() {
@@ -296,7 +341,6 @@ class Chip8Machine {
 				
 			default:
 				console.log("unimplemented opcode")
-				//throw new Error("ummm this rom is broken it uses an instruction that hasnt been implemented! so dont use it ok😭")
 		}
 		this.display.draw();
 	}
@@ -341,13 +385,42 @@ class Instruction {
 
 export default Chip8Machine;
 
-const vx = 0;
-const vals = new Uint8Array(3);
-let hi = 0;
-for (let i = 2; i >= 0; i--) {
-	let val = Math.floor(vx / 10 ** i) - hi;
-	vals[2 - i] = val;
-	hi = Math.floor(vx / 10 ** i) * 10;
+class Sound {
+	constructor() {
+		this.ctx = null;
+		this.oscillator = null;
+		this.gain = null;
+		this.playing = false;
+	}
+	
+	// Call this from a click handler first (Safari requirement)
+	init() {
+		if (!this.ctx) {
+			this.ctx = new(window.AudioContext || window.webkitAudioContext)();
+		}
+		if (this.ctx.state === 'suspended') {
+			this.ctx.resume();
+		}
+	}
+	
+	start() {
+		if (this.playing || !this.ctx) return;
+		this.oscillator = this.ctx.createOscillator();
+		this.gain = this.ctx.createGain();
+		this.oscillator.type = 'square';
+		this.oscillator.frequency.value = 440;
+		this.gain.gain.value = 0.1; // keep it quiet, square waves are harsh
+		this.oscillator.connect(this.gain);
+		this.gain.connect(this.ctx.destination);
+		this.oscillator.start();
+		this.playing = true;
+	}
+	
+	stop() {
+		if (!this.playing) return;
+		this.oscillator.stop();
+		this.oscillator.disconnect();
+		this.gain.disconnect();
+		this.playing = false;
+	}
 }
-
-console.log(vals)

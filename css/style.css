@@ -25,6 +25,9 @@ canvas {
 .displayDiv {
     min-width: 50%;
     min-height: 50%;
+    display: flex;
+    flex-direction: column;
+    gap:30px;
 }
 
 .keypad {
@@ -32,9 +35,6 @@ canvas {
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(4, 1fr);
     gap: 10px;
-    
-    width: 90vw;
-    height: 90vw;
 }
 
 
