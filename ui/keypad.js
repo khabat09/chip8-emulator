@@ -4,7 +4,6 @@ class Keypad {
 		this.keypad = document.createElement("div");
 		this.setup();
 	}
-	
 	setup() {
 		this.keypad.classList.add("keypad");
 		for (let i = 0; i <= 0xf; i++) {
