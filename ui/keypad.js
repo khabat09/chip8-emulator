@@ -1,7 +1,7 @@
 class Keypad {
 	constructor(machine) {
-		this.keypad = document.createElement("div");
 		this.machine = machine;
+		this.keypad = document.createElement("div");
 		this.setup();
 	}
 	
