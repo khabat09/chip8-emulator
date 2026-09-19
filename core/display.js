@@ -1,5 +1,5 @@
 import Keypad from "../ui/keypad.js";
-import MachineStates from "/core/machineStates.js";
+import MachineStates from "./machineStates.js";
 
 class Display {
 	constructor(machine, size, scale) {
