@@ -1,4 +1,4 @@
-import Machine from "/core/chip8Machine.js";
+import Machine from "./chip8Machine.js";
 
 let lastTime = 0;
 let dt = 0;

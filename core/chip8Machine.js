@@ -1,5 +1,5 @@
-import STATES from "/core/machineStates.js";
-import Display from "/core/display.js";
+import STATES from "./machineStates.js";
+import Display from "./display.js";
 
 
 const chip8FontSet = new Uint8Array([

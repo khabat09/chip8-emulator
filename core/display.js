@@ -1,4 +1,4 @@
-import Keypad from "/ui/keypad.js";
+import Keypad from "../ui/keypad.js";
 import MachineStates from "/core/machineStates.js";
 
 class Display {
