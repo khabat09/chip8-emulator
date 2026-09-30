@@ -25,7 +25,7 @@ class Display {
 		this.displayDiv.appendChild(this.ca);
 		this.displayDiv.appendChild(this.consoleBtns);
 		this.displayDiv.appendChild(this.keypad.keypad);
-		document.body.appendChild(this.displayDiv);
+		document.querySelector("#machines").appendChild(this.displayDiv);
 		this.size = size;
 		this.data = new Uint8Array(64 * 32);
 		this.c = this.ca.getContext("2d");
