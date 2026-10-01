@@ -12,10 +12,21 @@ class Keypad {
 			key.classList.add("key");
 			key.textContent = i.toString(16);
 			
-			key.addEventListener("touchstart", () => {
+			key.addEventListener("touchstart", (e) => {
+				e.preventDefault();
 				this.machine.keyPress(i);
 			});
-			key.addEventListener("touchend", () => {
+			key.addEventListener("touchend", (e) => {
+				e.preventDefault();
+				this.machine.keyRelease(i);
+			});
+			key.addEventListener("mousedown", () => {
+				this.machine.keyPress(i);
+			});
+			key.addEventListener("mouseup", () => {
+				this.machine.keyRelease(i);
+			});
+			key.addEventListener("mouseleave", () => {
 				this.machine.keyRelease(i);
 			});
 			

@@ -43,6 +43,7 @@ class Display {
 		
 		this.filePicker.addEventListener("change", () => {
 			const file = this.filePicker.files[0];
+			if (!file) return;
 			this.machine.loadRom(file)
 		});
 		
